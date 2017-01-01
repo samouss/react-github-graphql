@@ -1,6 +1,37 @@
 import React, { Component } from 'react';
 import { query } from './client';
 
+const defaultVariables = {
+  direction: 'DESC',
+};
+
+const graphQuery = `
+  query(
+    $after: String,
+    $direction: OrderDirection!,
+  ) {
+    viewer {
+      login
+      repositories(
+        first: 5,
+        after: $after,
+        orderBy: {field: PUSHED_AT, direction: $direction},
+      ) {
+        edges {
+          node {
+            id,
+            name
+            description
+            createdAt
+            pushedAt
+          },
+          cursor,
+        }
+      }
+    }
+  }
+`;
+
 class Container extends Component {
 
   constructor(props) {
@@ -13,29 +44,9 @@ class Container extends Component {
   }
 
   componentDidMount() {
-    query(`
-      query($after: String) {
-        viewer {
-          login
-          repositories(
-            first: 5,
-            after: $after,
-            orderBy: {field: PUSHED_AT, direction: DESC},
-          ) {
-            edges {
-              node {
-                id,
-                name
-                description
-                createdAt
-                pushedAt
-              },
-              cursor,
-            }
-          }
-        }
-      }
-    `).then(res => {
+    query(graphQuery, {
+      ...defaultVariables,
+    }).then(res => {
       this.setState({
         isLoading: false,
         data: res,
